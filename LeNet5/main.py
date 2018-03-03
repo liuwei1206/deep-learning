@@ -55,7 +55,7 @@ class LeNet5(nn.Module):
         x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
         #第二次卷积+池化操作
         x = F.max_pool2d(F.relu(self.conv2(x)), (2, 2))
-        #重新塑形,将多维数据重新塑造为二维数据
+        #重新塑形,将多维数据重新塑造为二维数据，256*400
         x = x.view(-1, self.num_flat_features(x))
         print('size', x.size())
         #第一个全连接
@@ -65,6 +65,7 @@ class LeNet5(nn.Module):
         return x
 
     def num_flat_features(self, x):
+        #x.size()返回值为(256, 16, 5, 5)，size的值为(16, 5, 5)，256是batch_size
         size = x.size()[1:]        #x.size返回的是一个元组，size表示截取元组中第二个开始的数字
         num_features = 1
         for s in size:
@@ -74,7 +75,7 @@ class LeNet5(nn.Module):
 #定义一些超参数
 use_gpu = torch.cuda.is_available()
 batch_size = 256
-kwargs = {'num_workers': 2, 'pin_memory': True}
+kwargs = {'num_workers': 2, 'pin_memory': True}                              #DataLoader的参数
 
 #参数值初始化
 def weight_init(m):
@@ -92,13 +93,13 @@ def train(epoch):
     for batch_idx, (data, target) in enumerate(train_loader):
         if use_gpu:
             data, target = data.cuda(), target.cuda()
-        data, target = Variable(data), Variable(target)
+        data, target = Variable(data), Variable(target)                      #定义为Variable类型，能够调用autograd
         #初始化时，要清空梯度
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
-        optimizer.step()
+        optimizer.step()                                                     #相当于更新权重值
         if batch_idx % 100 == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                epoch, batch_idx * len(data), len(train_loader.dataset),
@@ -106,8 +107,7 @@ def train(epoch):
 
 #定义测试函数			   
 def test():
-    #?什么意思
-    model.eval()
+    model.eval()                                                             #让模型变为测试模式，主要是保证dropout和BN和训练过程一致。BN是指batch normalization
     test_loss = 0
     correct = 0
     for data, target in test_loader:
@@ -117,7 +117,7 @@ def test():
         output = model(data)
         #计算总的损失
         test_loss += criterion(output, target).data[0]
-        pred = output.data.max(1, keepdim=True)[1]
+        pred = output.data.max(1, keepdim=True)[1]                           #获得得分最高的类别
         correct += pred.eq(target.data.view_as(pred)).cpu().sum()
     
     test_loss /= len(test_loader.dataset)
@@ -153,7 +153,6 @@ criterion = nn.CrossEntropyLoss(size_average=False)
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.99))
 
 #调用函数执行训练和测试
-'''
 for epoch in range(1, 501):
     print('----------------start train-----------------')
     train(epoch)
@@ -162,5 +161,3 @@ for epoch in range(1, 501):
     print('----------------start test-----------------')
     test()
     print('----------------end test-----------------')
-'''
-train(1)
