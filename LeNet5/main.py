@@ -57,7 +57,7 @@ class LeNet5(nn.Module):
         x = F.max_pool2d(F.relu(self.conv2(x)), (2, 2))
         #重新塑形,将多维数据重新塑造为二维数据，256*400
         x = x.view(-1, self.num_flat_features(x))
-        print('size', x.size())
+        #print('size', x.size())
         #第一个全连接
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -151,6 +151,9 @@ else:
 criterion = nn.CrossEntropyLoss(size_average=False)
 #直接定义优化器，而不是调用backward
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.99))
+
+#调用参数初始化方法初始化网络中的所有参数
+model.apply(weight_init)                                                      #了解apply用法
 
 #调用函数执行训练和测试
 for epoch in range(1, 501):
