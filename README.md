@@ -1,2 +1,2 @@
 # deep-learning
-To achieve a variety of classic neural network
+Implementations of some classic neural networks.
